@@ -9,6 +9,15 @@ async function bootstrap() {
     new FastifyAdapter()
   );
 
+  app.enableCors(
+    {
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      preflightContinue: false,
+      optionsSuccessStatus: 204,
+    }
+  );
+
   const port = process.env.PORT || 3000;
 
 
