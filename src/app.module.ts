@@ -4,6 +4,7 @@ import databaseConfig from './config/database.config';
 import { DatabaseModule } from './database/database.module';
 import {envValidationSchema} from "./config/validation/join.validation";
 import { AuthModule } from './modules/auth/auth.module';
+import { FilesModule } from './modules/files/files.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { AuthModule } from './modules/auth/auth.module';
   ),
     DatabaseModule,
     AuthModule,
+    FilesModule,
   
 ],
 })

@@ -1,98 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Know Back
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST con NestJS + Fastify + MySQL (arquitectura modular).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tecnologías
 
-## Description
+- **Framework:** NestJS 11
+- **Adapter:** Fastify
+- **Base de datos:** MySQL 2 (pool de conexiones con mysql2/promise)
+- **Validación:** class-validator + Joi (variables de entorno)
+- **Auth:** bcrypt (sin JWT por ahora)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Requisitos
 
-## Project setup
+- Node.js >= 18
+- MySQL
+- Yarn
+
+## Instalación
 
 ```bash
-$ yarn install
+yarn install
 ```
 
-## Compile and run the project
+## Variables de entorno
+
+```env
+# DATABASE
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=tu_password
+DB_NAME=knowbox
+DB_PORT=3306
+
+# SERVER
+PORT=3000
+
+# AUTH
+JWT_SECRET=
+```
+
+## Ejecutar
 
 ```bash
-# development
-$ yarn run start
+# desarrollo (watch mode)
+yarn start:dev
 
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+# producción
+yarn start:prod
 ```
 
-## Run tests
+## Base de datos
 
-```bash
-# unit tests
-$ yarn run test
+```sql
+USE knowbox;
 
-# e2e tests
-$ yarn run test:e2e
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fullname VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL
+);
 
-# test coverage
-$ yarn run test:cov
+CREATE TABLE files (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(100) NOT NULL,
+  description VARCHAR(150),
+  url VARCHAR(500) NOT NULL,
+  id_user INT,
+  FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE
+);
 ```
 
-## Deployment
+## Endpoints
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Auth
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Método | Ruta | Descripción | Body |
+|---|---|---|---|
+| `POST` | `/auth/register` | Registrar usuario | `{ fullname, email, password }` |
+| `POST` | `/auth/login` | Iniciar sesión | `{ email, password }` |
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+### Files (recursos/guías)
+
+| Método | Ruta | Descripción | Body |
+|---|---|---|---|
+| `GET` | `/files` | Listar todos los recursos | — |
+| `GET` | `/files/:id` | Obtener un recurso por ID | — |
+| `GET` | `/files/user/:userId` | Recursos de un usuario | — |
+| `POST` | `/files` | Crear recurso | `{ title, description?, url, id_user }` |
+| `PUT` | `/files/:id` | Actualizar recurso | `{ title?, description?, url? }` |
+| `DELETE` | `/files/:id` | Eliminar recurso | — |
+
+## Arquitectura
+
+```
+src/
+├── main.ts
+├── app.module.ts
+├── config/           # Configuración y validación de ENV
+├── database/         # Pool de conexión MySQL (global)
+└── modules/
+    ├── auth/         # Registro y login
+    │   ├── controllers/
+    │   ├── services/
+    │   ├── repositories/  # SQL queries
+    │   ├── dto/
+    │   └── entities/
+    └── files/        # CRUD de recursos/guías
+        ├── controllers/
+        ├── services/
+        ├── repositories/  # SQL queries
+        ├── dto/
+        └── entities/
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Cada módulo es autocontenido: repositorio (SQL) → servicio (lógica) → controlador (rutas).
