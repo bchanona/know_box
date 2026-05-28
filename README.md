@@ -8,7 +8,7 @@ API REST con NestJS + Fastify + MySQL (arquitectura modular).
 - **Adapter:** Fastify
 - **Base de datos:** MySQL 2 (pool de conexiones con mysql2/promise)
 - **Validación:** class-validator + Joi (variables de entorno)
-- **Auth:** bcrypt (sin JWT por ahora)
+- **Auth:** bcrypt + JWT (autenticación basada en tokens con @nestjs/jwt)
 
 ## Requisitos
 
@@ -36,7 +36,8 @@ DB_PORT=3306
 PORT=3000
 
 # AUTH
-JWT_SECRET=
+JWT_SECRET=knowbox_jwt_secret_key_2024_secure_token
+JWT_EXPIRES_IN=24h
 ```
 
 ## Ejecutar
@@ -75,19 +76,22 @@ CREATE TABLE files (
 
 ### Auth
 
-| Método | Ruta | Descripción | Body |
-|---|---|---|---|
-| `POST` | `/auth/register` | Registrar usuario | `{ fullname, email, password }` |
-| `POST` | `/auth/login` | Iniciar sesión | `{ email, password }` |
+| Método | Ruta | Auth | Descripción | Body |
+|---|---|---|---|---|
+| `POST` | `/auth/register` | ❌ | Registrar usuario | `{ fullname, email, password }` |
+| `POST` | `/auth/login` | ❌ | Iniciar sesión | `{ email, password }` |
+| `GET` | `/auth/profile` | ✅ JWT | Obtener perfil del usuario autenticado | — |
 
 ### Files (recursos/guías)
+
+> Todos los endpoints de Files requieren autenticación JWT (`Authorization: Bearer <token>`).
 
 | Método | Ruta | Descripción | Body |
 |---|---|---|---|
 | `GET` | `/files` | Listar todos los recursos | — |
 | `GET` | `/files/:id` | Obtener un recurso por ID | — |
 | `GET` | `/files/user/:userId` | Recursos de un usuario | — |
-| `POST` | `/files` | Crear recurso | `{ title, description?, url, id_user }` |
+| `POST` | `/files` | Crear recurso | `{ title, description?, url }` (el `id_user` se obtiene del JWT) |
 | `PUT` | `/files/:id` | Actualizar recurso | `{ title?, description?, url? }` |
 | `DELETE` | `/files/:id` | Eliminar recurso | — |
 
