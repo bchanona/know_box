@@ -13,7 +13,7 @@ export class CreateFileDto {
     @IsString()
     url!: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    id_user!: number;
+    id_user?: number;
 }

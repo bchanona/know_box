@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards } from "@nestjs/common";
 import { FilesService } from "../services/files.service";
 import { CreateFileDto } from "../dto/create-file.dto";
 import { UpdateFileDto } from "../dto/update-file.dto";
+import { AuthGuard } from "../../auth/guards/auth.guard";
+import { CurrentUser } from "../../auth/decorators/current-user.decorator";
 
 @Controller('files')
+@UseGuards(AuthGuard)
 export class FilesController {
     constructor(private readonly filesService: FilesService) {}
 
@@ -23,8 +26,8 @@ export class FilesController {
     }
 
     @Post()
-    async create(@Body() dto: CreateFileDto) {
-        return this.filesService.create(dto);
+    async create(@Body() dto: CreateFileDto, @CurrentUser('sub') userId: number) {
+        return this.filesService.create({ ...dto, id_user: userId });
     }
 
     @Put(':id')

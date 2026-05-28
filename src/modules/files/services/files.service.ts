@@ -21,7 +21,7 @@ export class FilesService {
         return this.filesRepository.findByUserId(userId);
     }
 
-    async create(dto: CreateFileDto) {
+    async create(dto: CreateFileDto & { id_user: number }) {
         return this.filesRepository.create(dto);
     }
 
